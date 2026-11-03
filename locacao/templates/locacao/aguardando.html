@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load br %}
+{% block title %}Aguardando{% endblock %}
+{% block content %}
+<a class="voltar" href="{% url 'tarefas' %}">← Tarefas</a>
+<h1>Aguardando</h1>
+<p class="suave">Cobranças vencidas de empresas sem acesso direto à conta. Não são inadimplência: falta o proprietário confirmar o recebimento.</p>
+{% for imovel, linhas in grupos %}
+<h2><a href="{% url 'imovel' imovel.pk %}">{{ imovel }}</a></h2>
+<div class="tabela-rolagem">
+  <table class="tabela">
+    <thead><tr><th scope="col">Competência</th><th scope="col">Vencimento</th><th scope="col" class="num">Espera</th><th scope="col" class="num">Saldo</th><th scope="col">Situação</th><th scope="col">Ação</th></tr></thead>
+    <tbody>
+    {% for l in linhas %}
+      <tr>
+        <td><a href="{% url 'locacao' l.c.locacao_id %}">{{ l.c.competencia|mes_br }}</a></td>
+        <td>{{ l.c.vencimento|data_br }}</td>
+        <td class="num">{{ l.dias }} dias</td>
+        <td class="num">{{ l.saldo|brl }}</td>
+        <td><span class="status status-aguardando">{{ l.rotulo }}</span></td>
+        <td>{% include "locacao/_pagar.html" with c=l.c saldo=l.saldo %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% empty %}
+<div class="cartao"><p>Nenhuma cobrança aguardando.</p></div>
+{% endfor %}
+{% endblock %}

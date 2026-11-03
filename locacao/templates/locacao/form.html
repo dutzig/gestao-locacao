@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block content %}
+{% if voltar %}<a class="voltar" href="{{ voltar }}">← Voltar</a>{% endif %}
+<h1>{{ titulo }}</h1>
+{% if ajuda %}<p class="suave">{{ ajuda }}</p>{% endif %}
+<div class="cartao cartao-form">
+  <form method="post" class="formulario" novalidate>
+    {% csrf_token %}
+    {% if form.errors %}
+    <div class="mensagem mensagem-error" role="alert" tabindex="-1" id="erros">
+      <p>Corrija os campos abaixo:</p>
+      <ul>
+        {% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}
+        {% for campo in form %}{% if campo.errors %}<li><a href="#{{ campo.id_for_label }}">{{ campo.label }}</a>: {{ campo.errors|join:" " }}</li>{% endif %}{% endfor %}
+      </ul>
+    </div>
+    <script>document.getElementById("erros").focus()</script>
+    {% endif %}
+    {% block campos %}
+    {% if grupos %}
+      {% for legenda, campos in grupos %}
+      <fieldset>
+        <legend>{{ legenda }}</legend>
+        {% for campo in campos %}{% include "locacao/_campo.html" %}{% endfor %}
+      </fieldset>
+      {% endfor %}
+    {% else %}
+      {% for campo in form %}{% include "locacao/_campo.html" %}{% endfor %}
+    {% endif %}
+    {% endblock %}
+    <div><button type="submit" class="botao botao-primario">{{ botao|default:"Salvar" }}</button></div>
+  </form>
+</div>
+{% block depois %}{% endblock %}
+{% endblock %}

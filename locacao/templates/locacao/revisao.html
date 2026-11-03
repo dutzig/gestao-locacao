@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Revisão da importação{% endblock %}
+{% block content %}
+<a class="voltar" href="{% url 'tarefas' %}">← Tarefas</a>
+<h1>Revisão da importação</h1>
+{% if itens %}
+<div class="tabela-rolagem">
+  <table class="tabela">
+    <thead><tr><th scope="col">Aba</th><th scope="col" class="num">Linha</th><th scope="col">Motivo</th><th scope="col">Dados</th><th scope="col">Ação</th></tr></thead>
+    <tbody>
+    {% for i in itens %}
+      <tr>
+        <td>{{ i.aba }}</td><td class="num">{{ i.linha }}</td><td>{{ i.motivo }}</td><td>{{ i.dados|default:"—" }}</td>
+        <td><form method="post" action="{% url 'revisao_resolver' i.pk %}">{% csrf_token %}<button type="submit" class="botao botao-secundario botao-pequeno">Marcar resolvido</button></form></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="cartao"><p>Nada a revisar.</p></div>
+{% endif %}
+{% endblock %}

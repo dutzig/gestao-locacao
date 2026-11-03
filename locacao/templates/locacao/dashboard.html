@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% load br %}
+{% block title %}Dashboard {{ r.mes|mes_br }}{% endblock %}
+{% block content %}
+<div class="cabecalho">
+  <h1>Dashboard — {{ r.mes|mes_br }}</h1>
+  <a href="{% url 'periodo' %}?ano={{ r.mes.year }}">Ver ano / semestre</a>
+</div>
+<nav class="seletor-mes" aria-label="Mês">
+  <a class="botao botao-secundario botao-pequeno" href="?mes={{ anterior|date:'Y-m' }}">← {{ anterior|mes_br }}</a>
+  <form method="get" class="seletor-mes-form">
+    <label for="mes" class="campo-oculto">Mês</label>
+    <input type="month" id="mes" name="mes" value="{{ r.mes|date:'Y-m' }}" placeholder="AAAA-MM" required>
+    <button type="submit" class="botao botao-secundario botao-pequeno">Ver mês</button>
+  </form>
+  <a class="botao botao-secundario botao-pequeno" href="?mes={{ proximo|date:'Y-m' }}">{{ proximo|mes_br }} →</a>
+</nav>
+
+<div class="cartoes">
+  <dl class="cartao"><dt>Receita esperada</dt><dd class="cartao-valor">{{ r.esperada|brl }}</dd></dl>
+  <dl class="cartao"><dt>Receita realizada</dt><dd class="cartao-valor">{{ r.realizada|brl }}</dd><dd class="cartao-detalhe">{{ regra }}</dd></dl>
+  <dl class="cartao">
+    <dt>Pendente</dt><dd class="cartao-valor">{{ r.pendente_total|brl }}</dd>
+    <dd class="cartao-detalhe">das cobranças deste mês: em aberto ou atrasado {{ r.pendente_atrasado|brl }} · aguardando {{ r.pendente_aguardando|brl }}</dd>
+  </dl>
+  <dl class="cartao"><dt>Comissão</dt><dd class="cartao-valor">{{ r.comissao|brl }}</dd><dd class="cartao-detalhe">{{ regra }}</dd></dl>
+</div>
+
+<h2>Pendentes</h2>
+{% if pendentes %}
+<div class="tabela-rolagem">
+  <table class="tabela">
+    <thead><tr><th scope="col">Imóvel</th><th scope="col">Inquilino</th><th scope="col">Vencimento</th><th scope="col" class="num">Esperado</th><th scope="col" class="num ocultar-estreito">Recebido</th><th scope="col" class="num">Falta</th><th scope="col">Situação</th></tr></thead>
+    <tbody>
+    {% for l, classe, rotulo in pendentes %}
+      <tr>
+        <td>{% include "locacao/_imovel.html" with loc=l.cobranca.locacao %}</td>
+        <td>{{ l.cobranca.locacao.inquilino }}</td>
+        <td>{{ l.cobranca.vencimento|data_br }}</td>
+        <td class="num">{{ l.cobranca.valor_esperado|brl }}</td>
+        <td class="num ocultar-estreito">{{ l.recebido|brl }}</td>
+        <td class="num">{{ l.saldo|brl }}</td>
+        <td><span class="status status-{{ classe }}">{{ rotulo }}</span>
+          {% if user.is_staff %}{% include "locacao/_pagar.html" with c=l.cobranca saldo=l.saldo %}{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="cartao"><p>Nenhuma cobrança pendente neste mês.</p></div>
+{% endif %}
+
+{% if r.regra_nova %}
+<h2>Pagamentos do mês</h2>
+{% if r.pagamentos %}
+<div class="tabela-rolagem">
+  <table class="tabela">
+    <thead><tr><th scope="col">Data</th><th scope="col">Imóvel</th><th scope="col" class="num">Valor</th><th scope="col">Referente a</th></tr></thead>
+    <tbody>
+    {% for pl in r.pagamentos %}
+      <tr>
+        <td>{{ pl.pagamento.data|data_br }}</td>
+        <td>{% include "locacao/_imovel.html" with loc=pl.pagamento.locacao %}</td>
+        <td class="num">{{ pl.pagamento.valor|brl }}</td>
+        <td>{% for c in pl.competencias %}{{ c|mes_br }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="cartao"><p>Nenhum pagamento entrou neste mês.</p></div>
+{% endif %}
+{% endif %}
+
+<h2>Recebidos</h2>
+{% if recebidos %}
+<div class="tabela-rolagem">
+  <table class="tabela">
+    <thead><tr><th scope="col">Imóvel</th><th scope="col">Inquilino</th><th scope="col">Vencimento</th><th scope="col" class="num">Esperado</th><th scope="col" class="num">Recebido</th><th scope="col">Situação</th></tr></thead>
+    <tbody>
+    {% for l, classe, rotulo in recebidos %}
+      <tr>
+        <td>{% include "locacao/_imovel.html" with loc=l.cobranca.locacao %}</td>
+        <td>{{ l.cobranca.locacao.inquilino }}</td>
+        <td>{{ l.cobranca.vencimento|data_br }}</td>
+        <td class="num">{{ l.cobranca.valor_esperado|brl }}</td>
+        <td class="num">{{ l.recebido|brl }}</td>
+        <td><span class="status status-{{ classe }}">{{ rotulo }}</span></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="cartao"><p>Nenhum recebimento referente a este mês.</p></div>
+{% endif %}
+{% endblock %}

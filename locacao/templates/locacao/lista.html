@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="cabecalho">
+  <h1>{{ titulo }}</h1>
+  <a class="botao botao-primario" href="{{ novo_url }}">{{ novo_rotulo }}</a>
+</div>
+<form method="get" class="busca" role="search">
+  <label for="busca-q" class="campo-oculto">{{ busca }}</label>
+  <input type="search" id="busca-q" name="q" value="{{ q }}" placeholder="{{ busca }}">
+  <button type="submit" class="botao botao-secundario">Buscar</button>
+</form>
+{% if linhas %}
+<div class="tabela-rolagem">
+  <table class="tabela">
+    <thead><tr>
+      {% for rotulo, classe in colunas %}<th scope="col"{% if classe %} class="{{ classe }}"{% endif %}>{{ rotulo }}</th>{% endfor %}
+      {% if com_acao %}<th scope="col">Ação</th>{% endif %}
+    </tr></thead>
+    <tbody>
+    {% for l in linhas %}
+      <tr>
+        {% for texto, classe in l.celulas %}<td{% if classe %} class="{{ classe }}"{% endif %}>{% if forloop.first %}<a href="{{ l.url }}">{{ texto }}</a>{% else %}{{ texto }}{% endif %}</td>{% endfor %}
+        {% if com_acao %}<td>{% if l.acao %}<form method="post" action="{{ l.acao.url }}">{% csrf_token %}<button type="submit" class="botao botao-secundario botao-pequeno">{{ l.acao.rotulo }}</button></form>{% endif %}</td>{% endif %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="cartao">
+  {% if q %}<p>Nada encontrado para “{{ q }}”.</p>{% else %}<p>{{ vazio }}</p>{% endif %}
+  <p><a class="botao botao-primario" href="{{ novo_url }}">{{ novo_rotulo }}</a></p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,50 @@
+{% load static %}<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{% endblock %} · Gestão de Locação</title>
+  <link rel="stylesheet" href="{% static 'locacao/app.css' %}">
+</head>
+<body>
+  <a class="pular" href="#conteudo">Pular para o conteúdo</a>
+  <header class="topo">
+    <div class="topo-interno">
+      <a class="marca" href="{% url 'dashboard' %}">Gestão de Locação</a>
+      {% if user.is_authenticated %}
+      <nav class="nav" aria-label="Principal">
+        <ul>
+          {% if user.is_staff %}
+          {% url 'tarefas' as u %}<li><a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>Tarefas</a></li>
+          {% endif %}
+          {% url 'dashboard' as u %}<li><a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>Dashboard</a></li>
+          {% url 'periodo' as u %}<li><a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>Ano / semestre</a></li>
+          {% if user.is_staff %}
+          {% url 'imoveis' as u %}<li><a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>Imóveis</a></li>
+          {% url 'inquilinos' as u %}<li><a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>Inquilinos</a></li>
+          {% url 'reajustes' as u %}<li><a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>Reajustes</a></li>
+          {% url 'comissoes' as u %}<li><a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>Comissões</a></li>
+          {% url 'despesas' as u %}<li><a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>Despesas</a></li>
+          {% url 'config' as u %}<li><a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>Configurações</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+      <form method="post" action="{% url 'logout' %}" class="sair">{% csrf_token %}
+        <button type="submit" class="botao botao-secundario botao-pequeno">Sair</button>
+      </form>
+      {% endif %}
+    </div>
+  </header>
+  <main id="conteudo" class="conteudo" tabindex="-1">
+    {% if messages %}
+    <ul class="mensagens">
+      {% for m in messages %}<li class="mensagem{% if m.tags %} mensagem-{{ m.tags }}{% endif %}" role="{% if m.level_tag == 'error' %}alert{% else %}status{% endif %}">{{ m }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <script>/* form.envio-unico: desliga o botão no envio (evita pagamento em dobro); volta ao reabrir pelo histórico */
+  document.addEventListener("submit", function (e) { if (e.target.matches("form.envio-unico") && e.submitter) e.submitter.disabled = true; });
+  window.addEventListener("pageshow", function () { document.querySelectorAll("form.envio-unico [type=submit]").forEach(function (b) { b.disabled = false; }); });</script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% load br %}
+{% block title %}Locação {{ loc }}{% endblock %}
+{% block content %}
+<a class="voltar" href="{% url 'imovel' loc.imovel.pk %}">← Imóvel {{ loc.imovel }}</a>
+<div class="cabecalho">
+  <h1>Locação {{ loc.imovel }} — {{ loc.inquilino }}</h1>
+  <div class="acoes">
+    <a class="botao botao-primario" href="{% url 'pagamento_novo' loc.pk %}">Registrar pagamento</a>
+    <a class="botao botao-secundario" href="{% url 'locacao_editar' loc.pk %}">Editar</a>
+    {% if loc.ativa %}<a class="botao botao-secundario" href="{% url 'locacao_encerrar' loc.pk %}">Encerrar</a>{% endif %}
+  </div>
+</div>
+<div class="cartao">
+  <dl class="dados">
+    <dt>Imóvel</dt><dd><a href="{% url 'imovel' loc.imovel.pk %}">{{ loc.imovel }}</a></dd>
+    <dt>Inquilino</dt><dd><a href="{% url 'inquilino' loc.inquilino.pk %}">{{ loc.inquilino }}</a></dd>
+    <dt>Período</dt><dd>{% include "locacao/_periodo.html" %}{% if loc.duracao_meses %} ({{ loc.duracao_meses }} meses){% endif %}</dd>
+    <dt>Situação</dt><dd>{% if loc.ativa %}Ativa{% else %}Encerrada em {{ loc.data_saida|data_br }}{% endif %}</dd>
+    <dt>Vencimento</dt><dd>Dia {{ loc.dia_vencimento }}</dd>
+    <dt>Índice</dt><dd>{{ loc.get_indice_display }}{% if loc.mes_base_reajuste %} · mês-base: {{ loc.mes_base_reajuste|nome_mes }}{% endif %}</dd>
+    {% if loc.desconto_pontualidade %}<dt>Desconto pontualidade</dt><dd>{{ loc.desconto_pontualidade|brl }} até o dia {{ loc.dia_limite_desconto|default:"—" }}</dd>{% endif %}
+    {% if loc.isencao_meses %}<dt>Isenção</dt><dd>{{ loc.isencao_meses }} primeiros meses</dd>{% endif %}
+    {% if loc.garantia %}<dt>Garantia</dt><dd>{{ loc.garantia }}</dd>{% endif %}
+    {% if loc.corretor %}<dt>Corretor</dt><dd>{{ loc.corretor }}</dd>{% endif %}
+    <dt>Contrato</dt><dd>{% if loc.link_contrato %}<a href="{{ loc.link_contrato }}" target="_blank" rel="noopener noreferrer">Abrir contrato</a>{% else %}—{% endif %}</dd>
+    {% if loc.observacoes %}<dt>Observações</dt><dd>{{ loc.observacoes }}</dd>{% endif %}
+  </dl>
+</div>
+
+<div class="cabecalho">
+  <h2>Valores do aluguel</h2>
+  <a class="botao botao-secundario botao-pequeno" href="{% url 'valor_novo' loc.pk %}">Novo valor</a>
+</div>
+{% if valores %}
+<div class="tabela-rolagem">
+  <table class="tabela">
+    <thead><tr><th scope="col">Vigente desde</th><th scope="col" class="num">Valor</th><th scope="col">Motivo</th><th scope="col">Situação</th><th scope="col">Ação</th></tr></thead>
+    <tbody>
+    {% for v, atual, excluivel in valores %}
+      <tr><td>{{ v.vigente_desde|data_br }}</td><td class="num">{{ v.valor|brl }}</td><td>{{ v.get_motivo_display }}</td><td>{% if atual %}Vigente{% else %}Futuro{% endif %}</td>
+        <td>{% if excluivel %}<a class="botao botao-secundario botao-pequeno" href="{% url 'valor_excluir' v.pk %}">Excluir</a>{% else %}—{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="cartao"><p>Nenhum valor cadastrado. Sem valor vigente não há cobrança.</p></div>
+{% endif %}
+
+<h2>Cobranças</h2>
+{% if aguardando %}<p class="suave">Aguardando: {{ aguardando|brl }}</p>{% endif %}
+{% if cobrancas %}
+<div class="tabela-rolagem">
+  <table class="tabela">
+    <thead><tr><th scope="col">Competência</th><th scope="col">Vencimento</th><th scope="col" class="num">Esperado</th><th scope="col" class="num">Ajuste</th><th scope="col" class="num">Recebido</th><th scope="col">Situação</th><th scope="col">Ação</th></tr></thead>
+    <tbody>
+    {% for c, classe, rotulo, resta in cobrancas %}
+      <tr>
+        <td>{{ c.competencia|mes_br }}</td>
+        <td>{{ c.vencimento|data_br }}</td>
+        <td class="num">{{ c.valor_esperado|brl }}</td>
+        <td class="num">{% if c.ajuste %}{{ c.ajuste|brl }}{% if c.motivo_ajuste %} <span class="suave">({{ c.motivo_ajuste }})</span>{% endif %}{% else %}—{% endif %}</td>
+        <td class="num">{{ c.recebido|brl }}</td>
+        <td><span class="status status-{{ classe }}">{{ rotulo }}</span></td>
+        <td><div class="acoes-linha">
+          <a class="botao botao-secundario botao-pequeno" href="{% url 'cobranca_editar' c.pk %}">Editar</a>
+          {% if resta > 0 %}{% include "locacao/_pagar.html" with saldo=resta %}{% endif %}
+        </div></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="cartao"><p>Nenhuma cobrança gerada ainda.</p></div>
+{% endif %}
+
+<h2>Pagamentos</h2>
+{% if pagamentos %}
+<div class="tabela-rolagem">
+  <table class="tabela">
+    <thead><tr><th scope="col">Data</th><th scope="col" class="num">Valor</th><th scope="col">Observações</th><th scope="col">Ação</th></tr></thead>
+    <tbody>
+    {% for p in pagamentos %}<tr><td>{{ p.data|data_br }}</td><td class="num">{{ p.valor|brl }}</td><td>{{ p.observacoes|default:"—" }}</td>
+      <td><a class="botao botao-secundario botao-pequeno" href="{% url 'pagamento_excluir' p.pk %}">Excluir</a></td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="cartao"><p>Nenhum pagamento registrado.</p></div>
+{% endif %}
+
+{% if reajustes %}
+<h2>Reajustes</h2>
+<div class="tabela-rolagem">
+  <table class="tabela">
+    <thead><tr><th scope="col">Ano</th><th scope="col">Índice</th><th scope="col" class="num">Percentual</th><th scope="col" class="num">Valor atual</th><th scope="col" class="num">Calculado</th><th scope="col">Decisão</th><th scope="col">Vigente desde</th></tr></thead>
+    <tbody>
+    {% for r in reajustes %}
+      <tr>
+        <td>{{ r.ano|stringformat:"d" }}</td><td>{{ r.get_indice_display }}</td>
+        <td class="num">{% if r.percentual is not None %}{{ r.percentual|floatformat:2 }} %{% else %}—{% endif %}</td>
+        <td class="num">{{ r.valor_atual|brl }}</td><td class="num">{{ r.valor_calculado|brl }}</td>
+        <td>{{ r.get_decisao_display }}{% if r.valor_aprovado %} ({{ r.valor_aprovado|brl }}){% endif %}</td>
+        <td>{{ r.vigente_desde|data_br }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if mostra_divida %}
+<h2>Dívida</h2>
+<div class="cartao">
+  <dl class="dados">
+    <dt>Saldo vencido</dt><dd>{{ divida|brl }}</dd>
+  </dl>
+  <form method="post" action="{% url 'situacao_divida' loc.pk %}" class="formulario-linha">
+    {% csrf_token %}
+    {% include "locacao/_campo.html" with campo=form_situacao.situacao_divida rotulo="Situação da cobrança" %}
+    <div><button type="submit" class="botao botao-secundario">Salvar situação</button></div>
+  </form>
+  <h3>Anotações</h3>
+  {% if anotacoes %}
+  <ul>{% for a in anotacoes %}<li><strong>{{ a.data|data_br }}</strong> — {{ a.texto|linebreaksbr }}</li>{% endfor %}</ul>
+  {% else %}<p class="suave">Nenhuma anotação.</p>{% endif %}
+  <form method="post" action="{% url 'anotacao_nova' loc.pk %}" class="formulario">
+    {% csrf_token %}
+    {% include "locacao/_campo.html" with campo=form_anotacao.data %}
+    {% include "locacao/_campo.html" with campo=form_anotacao.texto rotulo="Nova anotação" %}
+    <div><button type="submit" class="botao botao-secundario">Adicionar anotação</button></div>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "locacao/form.html" %}
+{% block depois %}
+<div class="cabecalho">
+  <h2>Empresas</h2>
+  <a class="botao botao-secundario botao-pequeno" href="{% url 'empresa_nova' %}">Nova empresa</a>
+</div>
+<div class="cartao">
+  {% if empresas %}
+  <ul>{% for e in empresas %}<li><a href="{% url 'empresa_editar' e.pk %}">{{ e.nome }}</a> — acesso direto à conta: {{ e.acesso_direto|yesno:"sim,não" }}</li>{% endfor %}</ul>
+  {% else %}<p>Nenhuma empresa cadastrada.</p>{% endif %}
+  <p><a href="{% url 'empresas' %}">Ver todas as empresas</a></p>
+</div>
+{% endblock %}

@@ -1,0 +1,1 @@
+{% load br %}{% with fim=loc.data_saida|default:loc.termino %}{% if fim %}{{ loc.inicio|data_br }} a {{ fim|data_br }}{% else %}desde {{ loc.inicio|data_br }}{% endif %}{% endwith %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load br %}
+{% block title %}Dívidas{% endblock %}
+{% block content %}
+<a class="voltar" href="{% url 'tarefas' %}">← Tarefas</a>
+<h1>Dívidas</h1>
+<p class="suave">Cobranças com saldo de locações encerradas e de locações ativas com situação de dívida marcada. Total: <strong>{{ total|brl }}</strong>.</p>
+{% for loc, linhas, subtotal in grupos %}
+<h2><a href="{% url 'locacao' loc.pk %}">{{ loc }}</a></h2>
+<p>Situação da dívida: <strong>{{ loc.get_situacao_divida_display }}</strong> · {% if loc.ativa %}Locação ativa{% else %}Encerrada em {{ loc.data_saida|data_br }}{% endif %} · Saldo: {{ subtotal|brl }}</p>
+<div class="tabela-rolagem">
+  <table class="tabela">
+    <thead><tr><th scope="col">Competência</th><th scope="col">Vencimento</th><th scope="col" class="num">Esperado</th><th scope="col" class="num">Recebido</th><th scope="col" class="num">Saldo</th></tr></thead>
+    <tbody>
+    {% for c, resta in linhas %}
+      <tr><td>{{ c.competencia|mes_br }}</td><td>{{ c.vencimento|data_br }}</td><td class="num">{{ c.valor_esperado|brl }}</td><td class="num">{{ c.recebido|brl }}</td><td class="num">{{ resta|brl }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% empty %}
+<div class="cartao"><p>Nenhuma dívida em aberto.</p></div>
+{% endfor %}
+{% endblock %}

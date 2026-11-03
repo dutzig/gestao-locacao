@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load br %}
+{% block title %}Imóvel {{ imovel }}{% endblock %}
+{% block content %}
+<a class="voltar" href="{% url 'imoveis' %}">← Imóveis</a>
+<div class="cabecalho">
+  <div>
+    <h1>Imóvel {{ imovel }}</h1>
+    <p class="suave">Status: {{ imovel.vago|yesno:"Vago,Alugado" }}</p>
+  </div>
+  <div class="acoes">
+    <a class="botao botao-secundario" href="{% url 'imovel_editar' imovel.pk %}">Editar</a>
+    {% if imovel.vago %}<a class="botao botao-primario" href="{% url 'locacao_nova' %}?imovel={{ imovel.pk }}">Nova locação</a>{% endif %}
+  </div>
+</div>
+{% for titulo, dados in grupos %}
+<h2>{{ titulo }}</h2>
+<div class="cartao">{% include "locacao/_dados.html" %}</div>
+{% endfor %}
+<h2>Locações</h2>
+{% if locacoes %}
+<div class="tabela-rolagem">
+  <table class="tabela">
+    <thead><tr><th scope="col">Inquilino</th><th scope="col">Período</th><th scope="col">Situação</th><th scope="col" class="num">Saldo em aberto</th><th scope="col" class="num">Aguardando</th></tr></thead>
+    <tbody>
+    {% for loc, aberto, aguardando in locacoes %}
+      <tr>
+        <td><a href="{% url 'locacao' loc.pk %}">{{ loc.inquilino }}</a></td>
+        <td>{% include "locacao/_periodo.html" %}</td>
+        <td>{{ loc.ativa|yesno:"Ativa,Encerrada" }}</td>
+        <td class="num">{{ aberto|brl }}</td>
+        <td class="num">{{ aguardando|brl }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="cartao"><p>Nenhuma locação cadastrada para este imóvel.</p></div>
+{% endif %}
+{% endblock %}

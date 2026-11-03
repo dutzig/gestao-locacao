@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load br %}
+{% block title %}Comissões{% endblock %}
+{% block content %}
+<h1>Comissões</h1>
+<p class="suave">
+  Mês de corte: {% if config.mes_corte %}{{ config.mes_corte|mes_br }} — a partir dele a comissão cai no mês em que o pagamento entrou; antes, pela competência{% else %}não configurado — todos os meses usam a regra pela competência{% endif %}.
+  <a href="{% url 'config' %}">Alterar em Configurações</a>
+</p>
+{% if pendentes %}
+<div class="cartao">
+  <form method="post" action="{% url 'comissoes_recebidas_ate' %}" class="formulario-linha">
+    {% csrf_token %}
+    <div class="campo"><label for="ate">Marcar como recebidas até</label><input type="month" id="ate" name="ate" max="{{ hoje|date:'Y-m' }}" required></div>
+    <div class="campo"><label for="recebida-ate">Recebidas em</label><input type="date" id="recebida-ate" name="recebida_em" value="{{ hoje|date:'Y-m-d' }}" required></div>
+    <div><button type="submit" class="botao botao-secundario">Marcar meses</button></div>
+  </form>
+  <p class="suave">Marca de uma vez os meses fechados com comissão ainda não recebida, até o mês escolhido.</p>
+</div>
+{% endif %}
+<div class="tabela-rolagem">
+  <table class="tabela">
+    <thead><tr><th scope="col">Mês</th><th scope="col" class="num">Comissão apurada</th><th scope="col">Regra</th><th scope="col">Recebida</th></tr></thead>
+    <tbody>
+    {% for m in meses %}
+      <tr>
+        <td>{{ m.mes|mes_br }}</td>
+        <td class="num">{{ m.comissao|brl }}</td>
+        <td>{% if m.regra_nova %}Pela data do pagamento{% else %}Pela competência{% endif %}</td>
+        <td>
+          {% if m.recebida_em %}Recebida em {{ m.recebida_em|data_br }}
+          {% elif not m.fechado %}<span class="suave">Mês em andamento</span>
+          {% elif m.comissao %}
+          <form method="post" action="{% url 'comissao_recebida' m.mes|date:'Y-m' %}" class="formulario-linha">
+            {% csrf_token %}
+            <label for="recebida-{{ forloop.counter }}" class="campo-oculto">Recebida em</label>
+            <input type="date" id="recebida-{{ forloop.counter }}" name="recebida_em" value="{{ hoje|date:'Y-m-d' }}" required>
+            <button type="submit" class="botao botao-secundario botao-pequeno">Marcar recebida</button>
+          </form>
+          {% else %}—{% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

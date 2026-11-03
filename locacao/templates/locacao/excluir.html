@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block content %}
+<a class="voltar" href="{{ voltar }}">← Voltar</a>
+<h1>{{ titulo }}</h1>
+<div class="cartao cartao-form">
+  <dl class="dados">{% for rotulo, valor in dados %}<dt>{{ rotulo }}</dt><dd>{{ valor }}</dd>{% endfor %}</dl>
+  <p>{{ texto }}</p>
+  {% if aviso %}<p class="mensagem mensagem-warning" role="status">{{ aviso }}</p>{% endif %}
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="botao botao-primario">{{ titulo }}</button>
+    <a class="botao botao-secundario" href="{{ voltar }}">Cancelar</a>
+  </form>
+</div>
+{% endblock %}

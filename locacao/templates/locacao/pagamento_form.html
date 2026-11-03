@@ -1,0 +1,29 @@
+{% extends "locacao/form.html" %}
+{% load br %}
+{% block campos %}
+{% for campo in form.principais %}{% include "locacao/_campo.html" %}{% endfor %}
+{% if form.linhas %}
+<details{% if manual_aberto %} open{% endif %}>
+  <summary>Distribuir manualmente entre os meses</summary>
+  <p class="suave">Deixe tudo em branco para quitar automaticamente do mês mais antigo para o mais novo; o que sobrar adianta os meses seguintes.</p>
+  <div class="tabela-rolagem">
+    <table class="tabela">
+      <thead><tr><th scope="col">Mês</th><th scope="col" class="num">Saldo</th><th scope="col">Valor para este mês</th></tr></thead>
+      <tbody>
+      {% for c, saldo, campo in form.linhas %}
+        <tr>
+          <td>{{ c.competencia|mes_br }}</td>
+          <td class="num">{{ saldo|brl }}</td>
+          <td><label for="{{ campo.id_for_label }}" class="campo-oculto">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</details>
+{% endif %}
+{% endblock %}
+{% block depois %}
+<script>document.querySelector("form.formulario").addEventListener("submit", function (e) { if (e.submitter) e.submitter.disabled = true; })
+window.addEventListener("pageshow", function () { document.querySelectorAll("form.formulario [type=submit]").forEach(function (b) { b.disabled = false; }); })</script>
+{% endblock %}

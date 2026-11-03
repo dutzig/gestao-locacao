@@ -1,0 +1,10 @@
+{% comment %}
+Campo padrão: {% include "locacao/_campo.html" with campo=form.x rotulo="Opcional" %}
+O Django 5.2 já põe aria-invalid e aria-describedby (ids *_helptext e *_error) no widget.
+{% endcomment %}
+<div class="campo{% if campo.errors %} campo-erro{% endif %}">
+  <label for="{{ campo.id_for_label }}">{{ rotulo|default:campo.label }}</label>
+  {{ campo }}
+  {% if campo.help_text %}<p class="ajuda" id="{{ campo.auto_id }}_helptext">{{ campo.help_text }}</p>{% endif %}
+  {{ campo.errors }}
+</div>

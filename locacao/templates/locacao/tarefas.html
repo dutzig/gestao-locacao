@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Tarefas{% endblock %}
+{% block content %}
+<div class="cabecalho">
+  <h1>Tarefas</h1>
+  <div class="acoes">
+    <a class="botao botao-secundario" href="{% url 'dividas' %}">Dívidas</a>
+    <a class="botao botao-secundario" href="{% url 'tarefa_nova' %}">Nova tarefa</a>
+  </div>
+</div>
+<div class="cartao">
+  <form method="post" action="{% url 'tarefa_nova' %}" class="formulario formulario-linha">
+    {% csrf_token %}
+    {% include "locacao/_campo.html" with campo=form.titulo rotulo="Nova tarefa rápida" %}
+    {% include "locacao/_campo.html" with campo=form.prazo %}
+    {% include "locacao/_campo.html" with campo=form.imovel %}
+    <div><button type="submit" class="botao botao-primario">Adicionar</button></div>
+  </form>
+</div>
+{% for rotulo, itens in grupos %}
+<h2>{{ rotulo }} <span class="suave">({{ itens|length }})</span></h2>
+<ul class="tarefas">
+  {% for i in itens %}
+  <li class="cartao">
+    <a href="{{ i.url }}">{{ i.titulo }}</a>
+    {% if i.detalhe %}<p class="suave">{{ i.detalhe }}</p>{% endif %}
+    {% if i.concluir %}<form method="post" action="{{ i.concluir }}">{% csrf_token %}<button type="submit" class="botao botao-secundario botao-pequeno">Concluir</button></form>{% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% empty %}
+<div class="cartao"><p>Nenhuma tarefa pendente.</p></div>
+{% endfor %}
+{% endblock %}

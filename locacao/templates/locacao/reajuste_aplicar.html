@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load br %}
+{% block title %}Aplicar reajuste{% endblock %}
+{% block content %}
+<a class="voltar" href="{% url 'reajustes' %}?ano={{ r.ano|stringformat:'d' }}">← Reajustes de {{ r.ano|stringformat:"d" }}</a>
+<h1>Aplicar reajuste — {{ r.locacao.imovel }}</h1>
+<div class="cartao cartao-form">
+  <dl class="dados">
+    <dt>Locação</dt><dd><a href="{% url 'locacao' r.locacao.pk %}">{{ r.locacao }}</a></dd>
+    <dt>Valor</dt><dd>{{ r.valor_atual|brl }} → {{ r.valor_aprovado|brl }}</dd>
+    <dt>Vigente desde</dt><dd>{{ r.vigente_desde|data_br }}</dd>
+  </dl>
+  <p>Será cadastrado o novo valor do aluguel a partir de {{ r.vigente_desde|mes_br }}. As cobranças desse mês em diante ainda sem pagamento passam a esperar {{ r.valor_aprovado|brl }}. Esta ação não pode ser desfeita pela tela.</p>
+  <form method="post" action="{% url 'reajuste_aplicar' r.pk %}">
+    {% csrf_token %}
+    <button type="submit" class="botao botao-primario">Aplicar reajuste</button>
+    <a class="botao botao-secundario" href="{% url 'reajustes' %}?ano={{ r.ano|stringformat:'d' }}">Cancelar</a>
+  </form>
+</div>
+{% endblock %}

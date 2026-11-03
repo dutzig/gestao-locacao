@@ -1,0 +1,1 @@
+{% if user.is_staff %}<a href="{% url 'locacao' loc.pk %}">{{ loc.imovel }}</a>{% else %}{{ loc.imovel }}{% endif %}

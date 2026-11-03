@@ -1,0 +1,32 @@
+services:
+  gestao:
+    build: .
+    image: gestao
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./dados:/data
+    mem_limit: 256m
+    cpus: 0.5
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/saude/', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks: [traefik]
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK}
+      - traefik.http.routers.gestao.rule=Host(`${APP_HOST}`)
+      - traefik.http.routers.gestao.entrypoints=${TRAEFIK_ENTRYPOINT}
+      - traefik.http.routers.gestao.tls.certresolver=${TRAEFIK_CERTRESOLVER}
+      # Limite por IP (média 20 req/s, rajada 40): segura força bruta no login sem atrapalhar o uso normal.
+      - traefik.http.middlewares.gestao-limite.ratelimit.average=20
+      - traefik.http.middlewares.gestao-limite.ratelimit.burst=40
+      - traefik.http.routers.gestao.middlewares=gestao-limite
+      - traefik.http.services.gestao.loadbalancer.server.port=8000
+
+networks:
+  traefik:
+    external: true
+    name: ${TRAEFIK_NETWORK}

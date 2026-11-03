@@ -1,0 +1,292 @@
+/* Gestão de Locação: tokens e componentes reutilizáveis.
+   Status sempre com texto; cores aqui só reforçam. Pares texto/fundo com contraste AA. */
+
+:root {
+  --cor-fundo: #f7f7f5;
+  --cor-superficie: #ffffff;
+  --cor-texto: #1f2328;
+  --cor-texto-suave: #57606a;
+  --cor-borda: #d8dadd;
+  --cor-zebra: #fafaf8;
+  --cor-destaque: #2f5d62;
+  --cor-destaque-escuro: #234649;
+  --cor-destaque-claro: #e6efef;
+  --cor-foco: #2f5d62;
+
+  --cor-ok: #1a6b3c;       --cor-ok-fundo: #e5f3ea;
+  --cor-alerta: #7a4e00;   --cor-alerta-fundo: #fbf0d9;
+  --cor-erro: #a1262b;     --cor-erro-fundo: #fbe7e7;
+  --cor-info: #1f4f86;     --cor-info-fundo: #e5eef9;
+  --cor-neutro: #4b5259;   --cor-neutro-fundo: #eceeef;
+
+  --fonte: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --fs-pequena: 0.875rem;
+  --fs-base: 1rem;
+  --fs-titulo: 1.375rem;
+
+  --esp-1: 0.25rem;
+  --esp-2: 0.5rem;
+  --esp-3: 0.75rem;
+  --esp-4: 1rem;
+  --esp-6: 1.5rem;
+
+  --raio: 6px;
+  --largura-max: 72rem;
+  --altura-topo: 3.25rem;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--altura-topo) + var(--esp-4)); }
+
+body {
+  margin: 0;
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  font: var(--fs-base)/1.5 var(--fonte);
+}
+
+h1 { font-size: var(--fs-titulo); margin: 0 0 var(--esp-4); }
+h2 { font-size: 1.125rem; margin: var(--esp-6) 0 var(--esp-3); }
+
+a { color: var(--cor-destaque); }
+a:hover { color: var(--cor-destaque-escuro); }
+
+:focus-visible {
+  outline: 3px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.suave { color: var(--cor-texto-suave); }
+
+.pular {
+  position: absolute;
+  left: var(--esp-2);
+  top: -3rem;
+  z-index: 20;
+  padding: var(--esp-2) var(--esp-3);
+  background: var(--cor-superficie);
+  border-radius: var(--raio);
+}
+.pular:focus { top: var(--esp-2); }
+
+/* Layout: cabeçalho fixo + conteúdo centralizado */
+.topo {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--cor-destaque);
+  color: #fff;
+}
+.topo-interno {
+  max-width: var(--largura-max);
+  margin: 0 auto;
+  min-height: var(--altura-topo);
+  padding: var(--esp-2) var(--esp-4);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2) var(--esp-6);
+}
+.marca { color: #fff; font-weight: 600; text-decoration: none; }
+.marca:hover { color: #fff; }
+.topo :focus-visible { outline-color: #fff; }
+
+.nav { display: flex; align-items: center; gap: var(--esp-4); flex: 1; }
+.nav ul { display: flex; gap: var(--esp-1); list-style: none; margin: 0; padding: 0; flex: 1; }
+.nav a {
+  display: block;
+  padding: var(--esp-1) var(--esp-3);
+  border-radius: var(--raio);
+  color: #fff;
+  text-decoration: none;
+}
+.nav a:hover { background: var(--cor-destaque-escuro); color: #fff; }
+.nav a[aria-current="page"] { background: var(--cor-destaque-escuro); font-weight: 600; }
+.sair { margin: 0; }
+
+.conteudo {
+  max-width: var(--largura-max);
+  margin: 0 auto;
+  padding: var(--esp-6) var(--esp-4);
+}
+.conteudo:focus { outline: none; }
+
+/* Tela estreita: navegação numa linha rolável na horizontal; cabeçalho deixa de ser fixo p/ não ocupar a tela */
+@media (max-width: 40rem) {
+  .topo { position: static; }
+  html { scroll-padding-top: 0; }
+  /* "Sair" fica fixo ao lado da marca; só os links rolam, com um esmaecido à direita indicando que há mais */
+  .sair { order: 1; margin-left: auto; }
+  .sair .botao { min-height: 2.75rem; }
+  .nav {
+    order: 2; flex-basis: 100%; min-width: 0; overflow-x: auto; padding: 5px 2px;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
+  }
+  .nav ul { flex: 0 0 auto; flex-wrap: nowrap; padding-right: 2rem; }
+  .nav li { flex: 0 0 auto; white-space: nowrap; }
+  .nav a { min-height: 2.75rem; display: flex; align-items: center; }
+}
+
+/* Cartões */
+.cartao {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  padding: var(--esp-4);
+  margin-bottom: var(--esp-4);
+}
+.cartao > :first-child { margin-top: 0; }
+.cartao > :last-child { margin-bottom: 0; }
+.cartao-estreito { max-width: 24rem; margin: var(--esp-6) auto; }
+
+/* Tabelas: densas, zebra suave, números à direita. Envolver em .tabela-rolagem p/ telas estreitas. */
+.tabela-rolagem { overflow-x: auto; margin-bottom: var(--esp-4); }
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--cor-superficie);
+  font-size: var(--fs-pequena);
+}
+.tabela th, .tabela td {
+  padding: var(--esp-1) var(--esp-2);
+  border-bottom: 1px solid var(--cor-borda);
+  text-align: left;
+  vertical-align: top;
+}
+.tabela th { font-weight: 600; color: var(--cor-texto-suave); white-space: nowrap; }
+.tabela tbody tr:nth-child(even) { background: var(--cor-zebra); }
+.tabela .num, .tabela td.num, .tabela th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Badges de status (texto obrigatório; cor só reforça) */
+.status {
+  display: inline-block;
+  padding: 0 var(--esp-2);
+  border-radius: 999px;
+  font-size: var(--fs-pequena);
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+.status-paga { color: var(--cor-ok); background: var(--cor-ok-fundo); }
+.status-parcial { color: var(--cor-alerta); background: var(--cor-alerta-fundo); }
+.status-isenta { color: var(--cor-neutro); background: var(--cor-neutro-fundo); }
+.status-aberto { color: var(--cor-info); background: var(--cor-info-fundo); }
+.status-atrasada { color: var(--cor-erro); background: var(--cor-erro-fundo); }
+.status-aguardando { color: var(--cor-alerta); background: var(--cor-alerta-fundo); border: 1px dashed currentColor; }
+
+/* Formulários: rótulo acima do campo */
+.formulario { display: grid; gap: var(--esp-4); }
+.campo { display: grid; gap: var(--esp-1); }
+.campo label { font-weight: 600; font-size: var(--fs-pequena); }
+.campo .ajuda { color: var(--cor-texto-suave); font-size: var(--fs-pequena); }
+.campo .erro, .campo .errorlist { color: var(--cor-erro); font-size: var(--fs-pequena); margin: 0; padding: 0; list-style: none; }
+input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: var(--esp-2) var(--esp-3);
+  font: inherit;
+  color: var(--cor-texto);
+  background: var(--cor-superficie);
+  border: 1px solid #8c959f;
+  border-radius: var(--raio);
+}
+input[aria-invalid="true"], .campo-erro input, .campo-erro select { border-color: var(--cor-erro); }
+
+/* Botões */
+.botao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: var(--esp-2) var(--esp-4);
+  font: inherit;
+  font-weight: 600;
+  border-radius: var(--raio);
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+}
+.botao-primario { background: var(--cor-destaque); color: #fff; }
+.botao-primario:hover { background: var(--cor-destaque-escuro); color: #fff; }
+.botao-secundario { background: var(--cor-superficie); color: var(--cor-destaque); border-color: var(--cor-destaque); }
+.botao-secundario:hover { background: var(--cor-destaque-claro); }
+.botao-pequeno { min-height: 2rem; padding: var(--esp-1) var(--esp-3); font-size: var(--fs-pequena); }
+
+/* Mensagens do Django (tags: success, info, warning, error) */
+.mensagens { list-style: none; margin: 0 0 var(--esp-4); padding: 0; display: grid; gap: var(--esp-2); }
+.mensagem {
+  padding: var(--esp-2) var(--esp-3);
+  border-radius: var(--raio);
+  border-left: 4px solid currentColor;
+  color: var(--cor-info);
+  background: var(--cor-info-fundo);
+}
+.mensagem-success { color: var(--cor-ok); background: var(--cor-ok-fundo); }
+.mensagem-warning { color: var(--cor-alerta); background: var(--cor-alerta-fundo); }
+.mensagem-error { color: var(--cor-erro); background: var(--cor-erro-fundo); }
+
+/* Cabeçalho de página: título à esquerda, ação principal à direita */
+.cabecalho { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--esp-2) var(--esp-4); margin-bottom: var(--esp-4); }
+.cabecalho h1 { margin: 0; }
+.cabecalho .acoes { display: flex; flex-wrap: wrap; gap: var(--esp-2); }
+.voltar { display: inline-block; margin-bottom: var(--esp-2); font-size: var(--fs-pequena); }
+.busca { display: flex; gap: var(--esp-2); margin-bottom: var(--esp-4); max-width: 28rem; }
+.tabela form { margin: 0; }
+
+/* Grupos de formulário e dados de leitura */
+fieldset { border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: var(--esp-4); margin: 0; display: grid; gap: var(--esp-4); }
+legend { font-weight: 600; padding: 0 var(--esp-2); }
+.campo input[type="checkbox"] { width: 1.25rem; height: 1.25rem; }
+.dados { display: grid; grid-template-columns: minmax(8rem, max-content) 1fr; gap: var(--esp-1) var(--esp-4); margin: 0; }
+.dados dt { color: var(--cor-texto-suave); font-size: var(--fs-pequena); }
+.dados dd { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+@media (max-width: 40rem) { .dados { grid-template-columns: 1fr; } .dados dd { margin-bottom: var(--esp-2); } }
+.cartao-form { max-width: 44rem; }
+.campo-oculto { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.mensagem ul { margin: var(--esp-1) 0 0; padding-left: var(--esp-6); }
+.mensagem p { margin: 0; }
+.mensagem a { color: inherit; }
+
+/* Formulário em linha (campos lado a lado, quebram em tela estreita) e grupos de botões em células */
+.formulario-linha { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--esp-2) var(--esp-4); margin-bottom: var(--esp-4); }
+.formulario-linha .campo { flex: 1 1 12rem; }
+.tabela .formulario-linha { margin: 0; gap: var(--esp-2); }
+.tabela .formulario-linha input { width: auto; min-height: 2rem; }
+.acoes-linha, .acoes-reajuste { display: flex; flex-wrap: wrap; gap: var(--esp-1); align-items: flex-start; }
+.acoes-reajuste form { display: grid; gap: var(--esp-1); }
+.acoes-reajuste input { min-width: 7rem; }
+.acoes-reajuste .erro { color: var(--cor-erro); margin: 0; font-size: var(--fs-pequena); }
+details summary { cursor: pointer; font-weight: 600; }
+details[open] summary { margin-bottom: var(--esp-2); }
+/* Pagamento rápido na linha da tabela (_pagar.html) */
+.pagar { margin-top: var(--esp-1); }
+.pagar summary { font-size: var(--fs-pequena); color: var(--cor-destaque); list-style: none; white-space: nowrap; }
+.pagar summary::-webkit-details-marker { display: none; }
+.pagar .formulario-linha { flex-direction: column; align-items: stretch; }
+.pagar .formulario-linha .campo { flex: none; }
+.tabela .pagar input { width: 100%; max-width: 12rem; }
+@media (max-width: 48rem) { .tabela .ocultar-estreito { display: none; } }
+.tarefas { list-style: none; margin: 0 0 var(--esp-4); padding: 0; }
+.tarefas li { display: grid; gap: var(--esp-1); margin-bottom: var(--esp-2); }
+.tarefas p { margin: 0; }
+.tarefas form { margin: 0; }
+
+/* Dashboard: seletor de mês, cartões de números (4 → 2 → 1 coluna) e linha de total */
+.seletor-mes { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2); margin-bottom: var(--esp-4); }
+.seletor-mes-form { display: flex; gap: var(--esp-2); margin: 0; }
+.seletor-mes-form input { width: auto; min-height: 2rem; }
+.cartoes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--esp-4); margin-bottom: var(--esp-4); }
+.cartoes .cartao { margin: 0; }
+@media (max-width: 64rem) { .cartoes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 30rem) { .cartoes { grid-template-columns: 1fr; } }
+.cartoes dt { font-size: var(--fs-pequena); font-weight: 600; color: var(--cor-texto-suave); }
+.cartoes dd { margin: var(--esp-1) 0 0; }
+.cartao-valor { font-size: 1.5rem; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.cartao-detalhe { font-size: var(--fs-pequena); color: var(--cor-texto-suave); font-variant-numeric: tabular-nums; }
+.tabela .linha-total th, .tabela .linha-total td { font-weight: 700; color: var(--cor-texto); border-top: 2px solid var(--cor-borda); }

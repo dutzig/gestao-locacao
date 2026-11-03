@@ -1,0 +1,13 @@
+*.sqlite3
+*.sqlite3-*
+*.xlsx
+*.age
+.env
+backup.env
+backups/
+dados/
+.venv/
+__pycache__/
+staticfiles/
+.superpowers/
+.claude/

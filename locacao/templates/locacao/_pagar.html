@@ -1,0 +1,23 @@
+{% load br l10n %}
+{% comment %}
+Pagamento rápido de uma cobrança: {% include "locacao/_pagar.html" with c=cobranca saldo=saldo %}
+Data sugerida = vencimento (o pagamento costuma ser lançado dias depois). Ids com o pk: vários por página.
+{% endcomment %}
+<details class="pagar">
+  <summary>Registrar pagamento <span aria-hidden="true">▾</span><span class="campo-oculto"> — {{ c.locacao.imovel }} {{ c.competencia|mes_br }}</span></summary>
+  <form method="post" action="{% url 'cobranca_pagar' c.pk %}" class="formulario-linha envio-unico">
+    {% csrf_token %}
+    <input type="hidden" name="voltar" value="{{ request.get_full_path }}">
+    <input type="hidden" name="saldo" value="{{ saldo|unlocalize }}">
+    <div class="campo">
+      <label for="pg{{ c.pk }}-valor">Valor recebido</label>
+      <input type="text" inputmode="decimal" name="valor" id="pg{{ c.pk }}-valor" value="{{ saldo|floatformat:"2g" }}" required>
+    </div>
+    <div class="campo">
+      <label for="pg{{ c.pk }}-data">Data do pagamento</label>
+      <input type="date" name="data" id="pg{{ c.pk }}-data" value="{{ c.vencimento|date:'Y-m-d' }}" required aria-describedby="pg{{ c.pk }}-ajuda">
+      <p class="ajuda" id="pg{{ c.pk }}-ajuda">Data em que o dinheiro entrou</p>
+    </div>
+    <div><button type="submit" class="botao botao-primario botao-pequeno">Confirmar</button></div>
+  </form>
+</details>

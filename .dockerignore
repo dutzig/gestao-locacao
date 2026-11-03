@@ -1,0 +1,14 @@
+.venv
+.git
+.superpowers
+.claude
+**/*.sqlite3
+**/*.xlsx
+**/*.age
+**/__pycache__
+dados/
+backups/
+.env
+backup.env
+staticfiles
+docs

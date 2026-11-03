@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load br %}
+{% block title %}Reajustes {{ ano|stringformat:"d" }}{% endblock %}
+{% block content %}
+<div class="cabecalho">
+  <h1>Reajustes de {{ ano|stringformat:"d" }}</h1>
+  <div class="acoes">
+    <a class="botao botao-secundario botao-pequeno" href="?ano={{ anterior|stringformat:'d' }}">← {{ anterior|stringformat:"d" }}</a>
+    <a class="botao botao-secundario botao-pequeno" href="?ano={{ seguinte|stringformat:'d' }}">{{ seguinte|stringformat:"d" }} →</a>
+  </div>
+</div>
+{% if linhas %}
+<div class="tabela-rolagem">
+  <table class="tabela">
+    <thead><tr><th scope="col">Imóvel</th><th scope="col">Índice</th><th scope="col" class="num">Percentual</th><th scope="col" class="num">Valor atual</th><th scope="col" class="num">Valor calculado</th><th scope="col">Situação</th><th scope="col">Datas</th><th scope="col">Ação</th></tr></thead>
+    <tbody>
+    {% for l in linhas %}{% with r=l.r loc=l.loc %}
+      <tr>
+        <td><a href="{% url 'locacao' loc.pk %}">{{ loc.imovel }}</a></td>
+        <td>{{ loc.get_indice_display }}</td>
+        <td class="num">{% if r.percentual is not None %}{{ r.percentual|floatformat:2 }} %{% else %}—{% endif %}</td>
+        <td class="num">{% if r %}{{ r.valor_atual|brl }}{% else %}—{% endif %}</td>
+        <td class="num">{% if r %}{{ r.valor_calculado|brl }}{% else %}—{% endif %}</td>
+        <td>{% if r %}{{ l.status }}{% if r.valor_aprovado %} ({{ r.valor_aprovado|brl }}){% endif %}{% else %}A calcular{% endif %}</td>
+        <td>{% if r %}Vigente desde {{ r.vigente_desde|data_br }}
+          {% if r.enviado_em %}<br>Enviado em {{ r.enviado_em|data_br }}{% endif %}
+          {% if r.decidido_em %}<br>Decidido em {{ r.decidido_em|data_br }}{% endif %}
+          {% if r.aplicado_em %}<br>Aplicado em {{ r.aplicado_em|data_br }}{% endif %}{% else %}—{% endif %}</td>
+        <td><div class="acoes-reajuste">
+          {% if not r or not r.enviado_em and r.decisao == "PENDENTE" %}
+          <form method="post" action="{% url 'reajuste_calcular' loc.pk %}">{% csrf_token %}
+            <input type="hidden" name="ano" value="{{ ano|stringformat:'d' }}">
+            {% if l.manual %}
+            <p class="erro" id="manual-{{ loc.pk }}-ajuda">{{ msg_indice }}</p>
+            <label for="manual-{{ loc.pk }}">Percentual acumulado (%)</label>
+            <input type="text" inputmode="decimal" id="manual-{{ loc.pk }}" name="percentual" required aria-describedby="manual-{{ loc.pk }}-ajuda">
+            {% endif %}
+            <button type="submit" class="botao botao-secundario botao-pequeno">{% if r %}Recalcular{% else %}Calcular{% endif %}</button>
+          </form>
+          {% endif %}
+          {% if r and not r.enviado_em and r.decisao == "PENDENTE" %}
+          <form method="post" action="{% url 'reajuste_enviado' r.pk %}">{% csrf_token %}<button type="submit" class="botao botao-secundario botao-pequeno">Marcar enviado</button></form>
+          {% endif %}
+          {% if r.enviado_em and r.decisao == "PENDENTE" %}
+          <form method="post" action="{% url 'reajuste_aprovar' r.pk %}">{% csrf_token %}
+            <label for="aprovado-{{ r.pk }}">Valor aprovado</label>
+            <input type="text" inputmode="decimal" id="aprovado-{{ r.pk }}" name="valor_aprovado" value="{{ r.valor_calculado|floatformat:2 }}" required>
+            <button type="submit" class="botao botao-primario botao-pequeno">Aprovar</button>
+          </form>
+          <form method="post" action="{% url 'reajuste_recusar' r.pk %}">{% csrf_token %}<button type="submit" class="botao botao-secundario botao-pequeno">Recusar</button></form>
+          {% endif %}
+          {% if r.decisao == "APROVADO" and not r.aplicado_em %}
+          <a class="botao botao-primario botao-pequeno" href="{% url 'reajuste_aplicar' r.pk %}">Aplicar…</a>
+          {% endif %}
+        </div></td>
+      </tr>
+    {% endwith %}{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="cartao"><p>Nenhum reajuste para {{ ano|stringformat:"d" }}.</p></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Acesso negado{% endblock %}
+{% block content %}
+<div class="cartao">
+  <h1>Acesso negado</h1>
+  <p>Seu usuário não tem permissão para acessar esta página.</p>
+  <p><a href="{% url 'dashboard' %}">Voltar ao dashboard</a></p>
+</div>
+{% endblock %}

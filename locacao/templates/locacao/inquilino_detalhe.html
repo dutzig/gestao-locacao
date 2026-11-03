@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load br %}
+{% block title %}{{ inquilino }}{% endblock %}
+{% block content %}
+<a class="voltar" href="{% url 'inquilinos' %}">← Inquilinos</a>
+<div class="cabecalho">
+  <h1>{{ inquilino }}</h1>
+  <a class="botao botao-secundario" href="{% url 'inquilino_editar' inquilino.pk %}">Editar</a>
+</div>
+<div class="cartao">{% include "locacao/_dados.html" %}</div>
+<h2>Locações</h2>
+{% if locacoes %}
+<div class="tabela-rolagem">
+  <table class="tabela">
+    <thead><tr><th scope="col">Imóvel</th><th scope="col">Período</th><th scope="col">Situação</th></tr></thead>
+    <tbody>
+    {% for loc in locacoes %}
+      <tr>
+        <td><a href="{% url 'locacao' loc.pk %}">{{ loc.imovel }}</a></td>
+        <td>{% include "locacao/_periodo.html" %}</td>
+        <td>{{ loc.ativa|yesno:"Ativa,Encerrada" }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="cartao"><p>Nenhuma locação para este inquilino.</p></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Entrar{% endblock %}
+{% block content %}
+<div class="cartao cartao-estreito">
+  <h1>Entrar</h1>
+  <form method="post" class="formulario" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+    <div class="mensagem mensagem-error" role="alert">{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div>
+    {% endif %}
+    {% include "locacao/_campo.html" with campo=form.username rotulo="Usuário" %}
+    {% include "locacao/_campo.html" with campo=form.password rotulo="Senha" %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <button type="submit" class="botao botao-primario">Entrar</button>
+  </form>
+</div>
+{% endblock %}

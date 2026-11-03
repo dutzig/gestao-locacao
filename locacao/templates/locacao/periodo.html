@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load br %}
+{% block title %}{% if semestre %}{{ semestre }}º semestre de {% endif %}{{ ano }}{% endblock %}
+{% block content %}
+<h1>{% if semestre %}{{ semestre }}º semestre de {% endif %}{{ ano }}</h1>
+<form method="get" class="formulario-linha">
+  <div class="campo">
+    <label for="ano">Ano</label>
+    <select id="ano" name="ano">{% for a in anos %}<option value="{{ a }}"{% if a == ano %} selected{% endif %}>{{ a }}</option>{% endfor %}</select>
+  </div>
+  <div class="campo">
+    <label for="semestre">Período</label>
+    <select id="semestre" name="semestre">
+      <option value="">Ano todo</option>
+      <option value="1"{% if semestre == 1 %} selected{% endif %}>1º semestre</option>
+      <option value="2"{% if semestre == 2 %} selected{% endif %}>2º semestre</option>
+    </select>
+  </div>
+  <button type="submit" class="botao botao-secundario">Ver</button>
+</form>
+{% if resumos %}
+<div class="tabela-rolagem">
+  <table class="tabela">
+    <thead><tr><th scope="col">Mês</th><th scope="col" class="num">Receita esperada</th><th scope="col" class="num">Receita realizada</th><th scope="col" class="num">Pendente</th><th scope="col" class="num">Comissão</th></tr></thead>
+    <tbody>
+    {% for r in resumos %}
+      <tr>
+        <td><a href="{% url 'dashboard' %}?mes={{ r.mes|date:'Y-m' }}">{{ r.mes|mes_br }}</a></td>
+        <td class="num">{{ r.esperada|brl }}</td>
+        <td class="num">{{ r.realizada|brl }}</td>
+        <td class="num">{{ r.pendente_total|brl }}</td>
+        <td class="num">{{ r.comissao|brl }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr class="linha-total">
+        <th scope="row">Total</th>
+        <td class="num">{{ total.esperada|brl }}</td>
+        <td class="num">{{ total.realizada|brl }}</td>
+        <td class="num">{{ total.pendente_total|brl }}</td>
+        <td class="num">{{ total.comissao|brl }}</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+<p class="suave">Só meses do histórico até o mês atual. Clique no mês para ver os detalhes.</p>
+{% else %}
+<div class="cartao"><p>Nenhum mês do histórico neste período.</p></div>
+{% endif %}
+{% endblock %}
