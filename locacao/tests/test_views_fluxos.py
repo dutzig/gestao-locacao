@@ -426,11 +426,26 @@ class FluxosTests(TestCase):
         resp = self.client.post(reverse("comissoes_recebidas_ate"), {"ate": "2026-03", "recebida_em": "2026-04-05"},
                                 follow=True)
         self.assertContains(resp, "2 meses marcados como recebidos")
-        self.assertEqual(list(ComissaoMes.objects.values_list("mes", "recebida_em")), [
-            (date(2026, 2, 1), date(2026, 4, 5)), (date(2026, 3, 1), date(2026, 4, 5)),
+        self.assertEqual(list(ComissaoMes.objects.values_list("mes", "recebida_em", "valor_recebido")), [
+            (date(2026, 2, 1), date(2026, 4, 5), Decimal("5.00")), (date(2026, 3, 1), date(2026, 4, 5), Decimal("5.00")),
         ])
         resp = self.client.post(reverse("comissoes_recebidas_ate"), {"ate": "", "recebida_em": ""}, follow=True)
         self.assertContains(resp, "Informe o mês e a data")
+
+    def test_comissao_guarda_valor_avisa_diferenca_e_desfaz(self):
+        self.client.post(reverse("pagamento_novo", args=[self.loc.pk]), {"data": "2026-02-10", "valor": "100"})
+        self.client.post(reverse("comissao_recebida", args=["2026-02"]), {"recebida_em": "2026-03-05"})
+        self.assertEqual(ComissaoMes.objects.get().valor_recebido, Decimal("5.00"))
+        pagina = self.client.get(reverse("comissoes"))
+        self.assertContains(pagina, "Recebida em 05/03/2026 (R$ 5,00)")
+        self.assertNotContains(pagina, "Mudou depois de marcada")
+        ComissaoMes.objects.update(valor_recebido=Decimal("3.00"))  # comissão apurada mudou depois de marcar
+        self.assertContains(self.client.get(reverse("comissoes")), "diferença de R$ 2,00")
+        resp = self.client.post(reverse("comissao_desfazer", args=["2026-02"]), follow=True)
+        self.assertContains(resp, "voltou a ficar a receber")
+        self.assertIsNone(ComissaoMes.objects.get().recebida_em)
+        self.assertContains(resp, "Marcar recebida")
+        self.assertEqual(self.client.post(reverse("comissao_desfazer", args=["x"])).status_code, 404)
 
     # --- aguardando, revisão, tarefas ---
 
@@ -505,7 +520,7 @@ class VisualizacaoBloqueadaTests(TestCase):
             ("pagamento_novo", [loc.pk]), ("cobranca_editar", [c.pk]), ("anotacao_nova", [loc.pk]),
             ("situacao_divida", [loc.pk]), ("reajustes", []), ("reajuste_calcular", [loc.pk]),
             ("reajuste_enviado", [r.pk]), ("reajuste_aprovar", [r.pk]), ("reajuste_recusar", [r.pk]),
-            ("reajuste_aplicar", [r.pk]), ("comissoes", []), ("comissao_recebida", ["2026-02"]),
+            ("reajuste_aplicar", [r.pk]), ("comissoes", []), ("comissao_recebida", ["2026-02"]), ("comissao_desfazer", ["2026-02"]),
             ("aguardando", []), ("revisao", []), ("revisao_resolver", [item.pk]),
             ("valor_excluir", [v.pk]), ("pagamento_excluir", [pag.pk]),
             ("dividas", []), ("comissoes_recebidas_ate", []), ("cobranca_pagar", [c.pk]),

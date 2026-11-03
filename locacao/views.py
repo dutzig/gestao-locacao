@@ -14,7 +14,7 @@ from django.utils.http import url_has_allowed_host_and_scheme, urlencode
 from django.views.decorators.http import require_POST
 
 from . import forms, indices, tarefas as tarefas_mod
-from .apuracao import mes_da_comissao, pela_data, resumo_mes, resumo_periodo, totais
+from .apuracao import ZERO, mes_da_comissao, pela_data, resumo_mes, resumo_periodo, totais
 from .cobrancas import (
     aguarda_proprietario, atualizar_vencimentos, encerrar_locacao, excluir_pagamento, excluir_valor, gerar_cobrancas,
     registrar_pagamento, saldo, situacao,
@@ -716,12 +716,14 @@ def reajuste_aplicar(request, pk):
 @admin_required
 def comissoes(request):
     hoje, config = timezone.localdate(), Config.get()
-    recebidas = {c.mes: c.recebida_em for c in ComissaoMes.objects.filter(recebida_em__isnull=False)}
+    recebidas = {c.mes: c for c in ComissaoMes.objects.filter(recebida_em__isnull=False)}
     meses, mes = [], primeiro_dia(config.inicio_historico)
     while mes <= primeiro_dia(hoje):
         r = resumo_mes(mes, hoje, config)
-        meses.append({"mes": mes, "comissao": r.comissao, "regra_nova": r.regra_nova, "recebida_em": recebidas.get(mes),
-                      "fechado": mes < primeiro_dia(hoje)})
+        c = recebidas.get(mes)
+        meses.append({"mes": mes, "comissao": r.comissao, "regra_nova": r.regra_nova, "recebida_em": c and c.recebida_em,
+                      "valor_recebido": c and c.valor_recebido, "fechado": mes < primeiro_dia(hoje),
+                      "diferenca": r.comissao - c.valor_recebido if c and c.valor_recebido is not None else ZERO})
         mes = somar_meses(mes, 1)
     pendentes = any(m["fechado"] and m["comissao"] and not m["recebida_em"] for m in meses)
     return render(request, "locacao/comissoes.html",
@@ -742,8 +744,10 @@ def comissoes_recebidas_ate(request):
     fim = min(primeiro_dia(form.cleaned_data["ate"]), somar_meses(primeiro_dia(hoje), -1))  # só meses fechados
     n = 0
     while mes <= fim:
-        if mes not in recebidas and resumo_mes(mes, hoje, config).comissao > 0:
-            ComissaoMes.objects.update_or_create(mes=mes, defaults={"recebida_em": form.cleaned_data["recebida_em"]})
+        valor = resumo_mes(mes, hoje, config).comissao if mes not in recebidas else ZERO
+        if valor > 0:
+            ComissaoMes.objects.update_or_create(
+                mes=mes, defaults={"recebida_em": form.cleaned_data["recebida_em"], "valor_recebido": valor})
             n += 1
         mes = somar_meses(mes, 1)
     messages.success(request, "1 mês marcado como recebido." if n == 1 else f"{n} meses marcados como recebidos.")
@@ -761,10 +765,24 @@ def comissao_recebida(request, mes):
         raise Http404  # só meses fechados do histórico
     form = forms.ComissaoRecebidaForm(request.POST)
     if form.is_valid():
-        ComissaoMes.objects.update_or_create(mes=d, defaults={"recebida_em": form.cleaned_data["recebida_em"]})
+        valor = resumo_mes(d, timezone.localdate()).comissao
+        ComissaoMes.objects.update_or_create(
+            mes=d, defaults={"recebida_em": form.cleaned_data["recebida_em"], "valor_recebido": valor})
         messages.success(request, f"Comissão de {mes_br(d)} marcada como recebida.")
     else:
         messages.error(request, "Informe a data em que a comissão foi recebida.")
+    return redirect("comissoes")
+
+
+@admin_required
+@require_POST
+def comissao_desfazer(request, mes):
+    try:
+        d = datetime.strptime(mes, "%Y-%m").date()
+    except ValueError:
+        raise Http404
+    if ComissaoMes.objects.filter(mes=d, recebida_em__isnull=False).update(recebida_em=None, valor_recebido=None):
+        messages.success(request, f"Comissão de {mes_br(d)} voltou a ficar a receber.")
     return redirect("comissoes")
 
 

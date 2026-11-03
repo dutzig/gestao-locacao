@@ -28,7 +28,13 @@
         <td class="num">{{ m.comissao|brl }}</td>
         <td>{% if m.regra_nova %}Pela data do pagamento{% else %}Pela competência{% endif %}</td>
         <td>
-          {% if m.recebida_em %}Recebida em {{ m.recebida_em|data_br }}
+          {% if m.recebida_em %}
+          <form method="post" action="{% url 'comissao_desfazer' m.mes|date:'Y-m' %}" class="formulario-linha">
+            {% csrf_token %}
+            <span>Recebida em {{ m.recebida_em|data_br }}{% if m.valor_recebido is not None %} ({{ m.valor_recebido|brl }}){% endif %}</span>
+            <button type="submit" class="botao botao-secundario botao-pequeno">Desfazer</button>
+          </form>
+          {% if m.diferenca %}<span class="status status-parcial">Mudou depois de marcada: diferença de {{ m.diferenca|brl }}</span>{% endif %}
           {% elif not m.fechado %}<span class="suave">Mês em andamento</span>
           {% elif m.comissao %}
           <form method="post" action="{% url 'comissao_recebida' m.mes|date:'Y-m' %}" class="formulario-linha">

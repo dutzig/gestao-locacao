@@ -293,6 +293,7 @@ class TarefaManual(models.Model):
 class ComissaoMes(models.Model):
     mes = models.DateField("mês", unique=True)
     recebida_em = models.DateField("recebida em", null=True, blank=True)
+    valor_recebido = Dinheiro("valor recebido", null=True, blank=True)  # comissão apurada quando foi marcada
     observacao = Texto("observação")
 
     class Meta:

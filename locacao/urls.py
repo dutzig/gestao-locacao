@@ -45,6 +45,7 @@ urlpatterns = [
     path("comissoes/", views.comissoes, name="comissoes"),
     path("comissoes/recebidas-ate/", views.comissoes_recebidas_ate, name="comissoes_recebidas_ate"),
     path("comissoes/<str:mes>/recebida/", views.comissao_recebida, name="comissao_recebida"),
+    path("comissoes/<str:mes>/desfazer/", views.comissao_desfazer, name="comissao_desfazer"),
     path("aguardando/", views.aguardando, name="aguardando"),
     path("dividas/", views.dividas, name="dividas"),
     path("importacao/revisao/", views.revisao, name="revisao"),
