@@ -386,17 +386,45 @@ def _excluir(request, titulo, voltar, dados, texto, excluir, sucesso, aviso=""):
     return redirect(voltar)
 
 
+def _meses_comissao(p):
+    """Meses cuja comissão apurada inclui o pagamento `p`, com a data que ele tem agora."""
+    corte = Config.get().mes_corte
+    meses = {mes_da_comissao(a.cobranca.competencia, p.data, corte) for a in p.alocacoes.select_related("cobranca")}
+    if pela_data(p.data, corte):
+        meses.add(primeiro_dia(p.data))  # inclusive a parte não distribuída
+    return meses
+
+
+def _aviso_comissao(meses):
+    recebidas = ComissaoMes.objects.filter(mes__in=meses, recebida_em__isnull=False).order_by("mes")
+    return "".join(f"Comissão de {mes_br(c.mes)} já marcada como recebida: o valor apurado desse mês vai mudar. "
+                   for c in recebidas).strip()
+
+
+@admin_required
+def pagamento_editar(request, pk):
+    p = get_object_or_404(Pagamento.objects.select_related("locacao"), pk=pk)
+    voltar = reverse("locacao", args=[p.locacao_id])
+    antes = _meses_comissao(p)  # o formulário muda p.data ao validar
+    form = forms.PagamentoEditarForm(_post(request), instance=p)
+
+    def salvar():
+        obj = _salvar_editada(form, p.locacao_id)
+        depois = _meses_comissao(obj)
+        if aviso := _aviso_comissao(antes ^ depois):  # só os meses que entraram ou saíram
+            messages.warning(request, aviso)
+        return obj
+
+    return _form(request, form, f"Editar pagamento — {p.locacao}", voltar, "Pagamento salvo.",
+                 lambda _: voltar, salvar=salvar,
+                 ajuda=f"Valor {brl(p.valor)}. A data define o mês da comissão; o desconto de pontualidade não é recalculado.")
+
+
 @admin_required
 def pagamento_excluir(request, pk):
     p = get_object_or_404(Pagamento.objects.select_related("locacao"), pk=pk)
     meses = sorted({a.cobranca.competencia for a in p.alocacoes.select_related("cobranca")})
-    corte = Config.get().mes_corte
-    da_comissao = {mes_da_comissao(m, p.data, corte) for m in meses}
-    if pela_data(p.data, corte):
-        da_comissao.add(primeiro_dia(p.data))  # inclusive a parte não distribuída
-    recebidas = ComissaoMes.objects.filter(mes__in=da_comissao, recebida_em__isnull=False).order_by("mes")
-    aviso = "".join(f"Comissão de {mes_br(c.mes)} já marcada como recebida: o valor apurado desse mês vai mudar. "
-                    for c in recebidas).strip()
+    aviso = _aviso_comissao(_meses_comissao(p))
     return _excluir(
         request, "Excluir pagamento", reverse("locacao", args=[p.locacao_id]),
         [("Locação", p.locacao), ("Data", data_br(p.data)), ("Valor", brl(p.valor)),

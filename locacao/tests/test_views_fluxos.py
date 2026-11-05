@@ -11,7 +11,7 @@ from locacao.cobrancas import gerar_cobrancas, saldo
 from locacao.indices import IndiceIndisponivel
 from locacao.templatetags.br import brl
 from locacao.models import (
-    Cobranca, ComissaoMes, Empresa, Imovel, Inquilino, Locacao, Pagamento, Reajuste, RevisaoImportacao, TarefaManual,
+    Cobranca, ComissaoMes, Config, Empresa, Imovel, Inquilino, Locacao, Pagamento, Reajuste, RevisaoImportacao, TarefaManual,
     ValorAluguel,
 )
 
@@ -216,6 +216,31 @@ class FluxosTests(TestCase):
         resp = self.client.post(url, follow=True)
         self.assertContains(resp, "Comissão de fev/2026 já marcada como recebida")
         self.assertFalse(Pagamento.objects.exists())
+
+    def test_editar_data_do_pagamento(self):
+        self.client.post(reverse("pagamento_novo", args=[self.loc.pk]), {"data": "2026-04-15", "valor": "100"})
+        p = self.loc.pagamentos.get()
+        alocado = list(p.alocacoes.values_list("cobranca_id", "valor"))
+        url = reverse("pagamento_editar", args=[p.pk])
+        self.assertContains(self.client.get(reverse("locacao", args=[self.loc.pk])), f'href="{url}"')
+        self.assertContains(self.client.get(url), 'value="2026-04-15"')
+        resp = self.client.post(url, {"data": "", "observacoes": ""})
+        self.assertEqual(resp.status_code, 200)
+        p.refresh_from_db()
+        self.assertEqual(p.data, date(2026, 4, 15))
+        ComissaoMes.objects.create(mes=date(2026, 4, 1), recebida_em=date(2026, 5, 5))
+        config = Config.get()
+        config.mes_corte = date(2026, 3, 1)
+        config.save()
+        resp = self.client.post(url, {"data": "2026-03-20", "observacoes": "conferido"}, follow=True)
+        self.assertRedirects(resp, reverse("locacao", args=[self.loc.pk]))
+        self.assertContains(resp, "Pagamento salvo.")
+        self.assertContains(resp, "Comissão de abr/2026 já marcada como recebida")
+        p.refresh_from_db()
+        self.assertEqual((p.data, p.valor, p.observacoes), (date(2026, 3, 20), Decimal("100.00"), "conferido"))
+        self.assertEqual(list(p.alocacoes.values_list("cobranca_id", "valor")), alocado)
+        self.loc.refresh_from_db()
+        self.assertTrue(self.loc.editada)
 
     def test_excluir_valor_futuro(self):
         futuro = ValorAluguel.objects.create(locacao=self.loc, vigente_desde=date(self.hoje.year + 1, 1, 1),
@@ -522,7 +547,7 @@ class VisualizacaoBloqueadaTests(TestCase):
             ("reajuste_enviado", [r.pk]), ("reajuste_aprovar", [r.pk]), ("reajuste_recusar", [r.pk]),
             ("reajuste_aplicar", [r.pk]), ("comissoes", []), ("comissao_recebida", ["2026-02"]), ("comissao_desfazer", ["2026-02"]),
             ("aguardando", []), ("revisao", []), ("revisao_resolver", [item.pk]),
-            ("valor_excluir", [v.pk]), ("pagamento_excluir", [pag.pk]),
+            ("valor_excluir", [v.pk]), ("pagamento_excluir", [pag.pk]), ("pagamento_editar", [pag.pk]),
             ("dividas", []), ("comissoes_recebidas_ate", []), ("cobranca_pagar", [c.pk]),
         ]
         self.client.force_login(User.objects.create_user("visualizacao", password="senha-teste-123"))

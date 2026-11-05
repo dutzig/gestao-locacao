@@ -5,7 +5,7 @@ from django.db import models
 
 from .dinheiro import primeiro_dia
 from .models import (
-    AnotacaoDivida, Cobranca, Config, Despesa, Empresa, Imovel, Inquilino, Locacao, TarefaManual, ValorAluguel,
+    AnotacaoDivida, Cobranca, Config, Despesa, Empresa, Imovel, Inquilino, Locacao, Pagamento, TarefaManual, ValorAluguel,
 )
 from .templatetags.br import brl, mes_br
 
@@ -174,6 +174,15 @@ class PagamentoForm(forms.Form):
         """Alocação manual preenchida, ou None (automático)."""
         itens = [(c, self.cleaned_data[f"aloc_{c.pk}"]) for c, _ in self.abertas if self.cleaned_data[f"aloc_{c.pk}"]]
         return itens or None
+
+
+class PagamentoEditarForm(forms.ModelForm):
+    data = forms.DateField(label="Data em que entrou", widget=DATA)
+
+    class Meta:
+        model = Pagamento
+        fields = ["data", "observacoes"]
+        widgets = {"observacoes": forms.Textarea(attrs={"rows": 3})}
 
 
 class PagarCobrancaForm(forms.Form):

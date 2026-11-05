@@ -83,7 +83,7 @@
     <thead><tr><th scope="col">Data</th><th scope="col" class="num">Valor</th><th scope="col">Observações</th><th scope="col">Ação</th></tr></thead>
     <tbody>
     {% for p in pagamentos %}<tr><td>{{ p.data|data_br }}</td><td class="num">{{ p.valor|brl }}</td><td>{{ p.observacoes|default:"—" }}</td>
-      <td><a class="botao botao-secundario botao-pequeno" href="{% url 'pagamento_excluir' p.pk %}">Excluir</a></td></tr>{% endfor %}
+      <td><a class="botao botao-secundario botao-pequeno" href="{% url 'pagamento_editar' p.pk %}">Editar</a> <a class="botao botao-secundario botao-pequeno" href="{% url 'pagamento_excluir' p.pk %}">Excluir</a></td></tr>{% endfor %}
     </tbody>
   </table>
 </div>

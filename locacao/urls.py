@@ -29,6 +29,7 @@ urlpatterns = [
     path("locacoes/<int:pk>/editar/", views.locacao_editar, name="locacao_editar"),
     path("locacoes/<int:pk>/valores/novo/", views.valor_novo, name="valor_novo"),
     path("valores/<int:pk>/excluir/", views.valor_excluir, name="valor_excluir"),
+    path("pagamentos/<int:pk>/editar/", views.pagamento_editar, name="pagamento_editar"),
     path("pagamentos/<int:pk>/excluir/", views.pagamento_excluir, name="pagamento_excluir"),
     path("locacoes/<int:pk>/encerrar/", views.locacao_encerrar, name="locacao_encerrar"),
     path("locacoes/<int:pk>/pagamentos/novo/", views.pagamento_novo, name="pagamento_novo"),
